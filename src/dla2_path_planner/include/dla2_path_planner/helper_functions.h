@@ -119,7 +119,14 @@ public:
     }
 
     ompl::base::Cost motionCost(const ompl::base::State *s1, const ompl::base::State *s2) const override {
-	return ompl::base::Cost(si_->distance(s1, s2));
+	const auto* s1_3D = s1->as<ob::RealVectorStateSpace::StateType>();
+	const auto* s2_3D = s2->as<ob::RealVectorStateSpace::StateType>();
+    double x1 = s1_3D->values[0]; double x2= s2_3D->values[0];
+    double y1 = s1_3D->values[1]; double y2= s2_3D->values[1];
+    double z1 = s1_3D->values[2]; double z2= s2_3D->values[2];
+    double path_length_with_cost = sqrt(pow(x2-x1, 2)+pow(y2-y1, 2) + 100*pow(z2-z1, 2));
+    // return ompl::base::Cost(si_->distance(s1, s2));
+    return ompl::base::Cost(path_length_with_cost);
     }
 
     ompl::base::Cost motionCostHeuristic(const ompl::base::State *s1, const ompl::base::State *s2) const override  {
