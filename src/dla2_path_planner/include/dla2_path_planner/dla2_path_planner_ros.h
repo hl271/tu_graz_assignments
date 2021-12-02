@@ -70,10 +70,10 @@ private:
     ros::Subscriber current_position_sub;
     ros::Subscriber goal_position_sub;
     ros::Publisher trajectory_pub;
-    void currentPositionCallback(const mav_planning_msgs::Point2D::ConstPtr& p_msg);
-    void goalPositionCallback(const mav_planning_msgs::Point2D::ConstPtr& p_msg);
+    void currentPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
+    void goalPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
     void convertOMPLPathToMsg();
-    mav_planning_msgs::Point2D current_position, goal_position;
+    geometry_msgs::Point current_position, goal_position;
     bool traj_planning_successful;
     std::shared_ptr<ompl::geometric::PathGeometric> p_last_traj_ompl;
     mav_planning_msgs::PolynomialTrajectory4D last_traj_msg;

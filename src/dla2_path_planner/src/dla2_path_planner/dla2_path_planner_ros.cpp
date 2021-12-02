@@ -18,8 +18,8 @@ DLA2PathPlanner::DLA2PathPlanner(ros::NodeHandle &n, ros::NodeHandle &pn, int ar
     goal_position_sub = pnode_.subscribe("goal_position", 10, &DLA2PathPlanner::goalPositionCallback, this);
     trajectory_pub = pnode_.advertise<mav_planning_msgs::PolynomialTrajectory4D>("planned_trajectory", 1);
 
-    current_position.x = 0.; current_position.y = 0.;
-    goal_position.x = 1.; goal_position.y = 1.;
+    current_position.x = 0.; current_position.y = 0.; current_position.z = 0.;
+    goal_position.x = 1.; goal_position.y = 1.; goal_position.z = 1.;
 
     // Parse the arguments, returns true if successful, false otherwise
     if (argParse(argc, argv, &runTime, &plannerType, &objectiveType, &outputFile))
@@ -36,14 +36,14 @@ DLA2PathPlanner::~DLA2PathPlanner() {
 
 }
 
-void DLA2PathPlanner::currentPositionCallback(const mav_planning_msgs::Point2D::ConstPtr& p_msg) {
+void DLA2PathPlanner::currentPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg) {
     current_position = *p_msg;
-    ROS_INFO_STREAM("New current position, x: " << current_position.x << "; y: " << current_position.y);
+    ROS_INFO_STREAM("New current position, x: " << current_position.x << "; y: " << current_position.y << "; z: " << current_position.z);
 }
 
-void DLA2PathPlanner::goalPositionCallback(const mav_planning_msgs::Point2D::ConstPtr& p_msg) {
+void DLA2PathPlanner::goalPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg) {
     goal_position = *p_msg;
-    ROS_INFO_STREAM("New goal position, x: " << goal_position.x << "; y: " << goal_position.y);
+    ROS_INFO_STREAM("New goal position, x: " << goal_position.x << "; y: " << goal_position.y << "; z: " << goal_position.z);
 
     plan();
 
@@ -68,7 +68,8 @@ void DLA2PathPlanner::convertOMPLPathToMsg() {
         ompl::base::State *p_s = states[i];
         const double &x_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[0];
         const double &y_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[1];
-        double z_s = 0.;
+        const double &z_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        // double z_s = 0.;
         double yaw_s = 0.;
         ROS_INFO_STREAM("states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s);
 
@@ -89,7 +90,7 @@ void DLA2PathPlanner::plan()
 {
     // Construct the robot state space in which we're planning. We're
     // planning in [0,1]x[0,1], a subset of R^2.
-    auto space(std::make_shared<ob::RealVectorStateSpace>(2));
+    auto space(std::make_shared<ob::RealVectorStateSpace>(3));
 
     // Set the bounds of space to be in [0,1].
     space->setBounds(0.0, 1.0);
@@ -107,12 +108,14 @@ void DLA2PathPlanner::plan()
     ob::ScopedState<> start(space);
     start->as<ob::RealVectorStateSpace::StateType>()->values[0] = current_position.x;
     start->as<ob::RealVectorStateSpace::StateType>()->values[1] = current_position.y;
+    start->as<ob::RealVectorStateSpace::StateType>()->values[2] = current_position.z;
 
     // Set our robot's goal state to be the top-right corner of the
     // environment, or (1,1).
     ob::ScopedState<> goal(space);
     goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal_position.x;
     goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal_position.y;
+    goal->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal_position.z;
 
     // Create a problem instance
     auto pdef(std::make_shared<ob::ProblemDefinition>(si));

@@ -116,16 +116,17 @@ public:
     {
         // We know we're working with a RealVectorStateSpace in this
         // example, so we downcast state into the specific type.
-        const auto* state2D =
+        const auto* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
 
         // Extract the robot's (x,y) position from its state
-        double x = state2D->values[0];
-        double y = state2D->values[1];
+        double x = state3D->values[0];
+        double y = state3D->values[1];
+        double z = state3D->values[2];
 
         // Distance formula between two points, offset by the circle's
         // radius
-        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)) - 0.25;
+        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) - 0.25;
     }
 };
 
@@ -221,7 +222,7 @@ void plan(double runTime, optimalPlanner plannerType, planningObjective objectiv
 {
     // Construct the robot state space in which we're planning. We're
     // planning in [0,1]x[0,1], a subset of R^2.
-    auto space(std::make_shared<ob::RealVectorStateSpace>(2));
+    auto space(std::make_shared<ob::RealVectorStateSpace>(3));
 
     // Set the bounds of space to be in [0,1].
     space->setBounds(0.0, 1.0);
