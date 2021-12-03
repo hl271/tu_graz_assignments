@@ -58,10 +58,23 @@ find_package(ompl REQUIRED)
 # message(WARNING "OMPL_LIBRARY_DIR: " ${OMPL_LIBRARY_DIR})
 # message(WARNING "OMPL_LIBRARIES: " ${OMPL_LIBRARIES})
 include_directories( ${OMPL_INCLUDE_DIRS} )
-link_directories( ${OMPL_LIBRARY_DIR} )
+link_directories( ${OMPL_LIBRARY_DIR})
+# ---- OCTOMAP ------------------------
+find_package(octomap REQUIRED)
+include_directories(${OCTOMAP_INCLUDE_DIRS})
+link_directories( ${OCTOMAP_LIBRARY_DIR})
+
+# ---- dynamicEDT3D -------------------------
+include_directories(${DYNAMICEDT3D_INCLUDE_DIRS})
+find_package(dynamicEDT3D REQUIRED)
+link_directories( ${DYNAMICEDT3D_LIBRARY_DIR} )
+
+link_directories(/usr/local/lib)
 set(EXTRA_LIBS
   ${EXTRA_LIBS}
   ${OMPL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+  ${DYNAMICEDT3D_LIBRARIES}
 )
 
 # some_non_ros_library
@@ -80,13 +93,20 @@ set(EXTRA_LIBS
 # --- OMPL_Example_OptimalPlanning ---
 add_executable(${PROJECT_NAME}_OMPL_Example_OptimalPlanning src/OMPL_Example_OptimalPlanning.cpp )
 target_link_libraries(${PROJECT_NAME}_OMPL_Example_OptimalPlanning
-    ${EXTRA_LIBS}
+${EXTRA_LIBS}
 )
 # ------------------------------------
 
+
+
+
+
+# add_executable(exampleEDTOctomap src/exampleEDTOctomap.cpp)
+# target_link_libraries(exampleEDTOctomap dynamicedt3d)
+
 # --- DLA2 Path Planner Library ---
 SET( SRC
-  src/${PROJECT_NAME}/${PROJECT_NAME}_ros.cpp
+src/${PROJECT_NAME}/${PROJECT_NAME}_ros.cpp
 )
 
 SET( HDR

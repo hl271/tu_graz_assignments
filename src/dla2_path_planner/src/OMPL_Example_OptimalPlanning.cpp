@@ -43,6 +43,9 @@
 // For ompl::msg::setLogLevel
 #include "ompl/util/Console.h"
 
+#include <dynamicEDT3D/dynamicEDTOctomap.h>
+#include <ros/ros.h>
+
 // The supported optimal planners, in alphabetical order
 #include <ompl/geometric/planners/bitstar/BITstar.h>
 #include <ompl/geometric/planners/cforest/CForest.h>
@@ -104,9 +107,10 @@ public:
         ob::StateValidityChecker(si) {}
 
     // Returns whether the given state's position overlaps the
-    // circular obstacle
+    // circular obstacleValidityCheckerValidityChecker
     bool isValid(const ob::State* state) const override
     {
+        
         return this->clearance(state) > 0.0;
     }
 
@@ -114,19 +118,69 @@ public:
     // boundary of the circular obstacle.
     double clearance(const ob::State* state) const override
     {
+        // std::cout << "isValid Function" << std::endl;
+        // octomap::OcTree *tree = NULL;
+        // tree->readBinary("maps/power_plant.bt");
+
+        // std::cout <<"read in tree, "<<tree->getNumLeafNodes()<<" leaves "<<std::endl;
+
+        // double x,y,z;
+        // tree->getMetricMin(x,y,z);
+        // octomap::point3d min(x,y,z);
+        // //std::cout<<"Metric min: "<<x<<","<<y<<","<<z<<std::endl;
+        // tree->getMetricMax(x,y,z);
+        // octomap::point3d max(x,y,z);
+        // //std::cout<<"Metric max: "<<x<<","<<y<<","<<z<<std::endl;
+
+        // bool unknownAsOccupied = true;
+        // unknownAsOccupied = false;
+        // float maxDist = 1.0;
+        // //- the first argument ist the max distance at which distance computations are clamped
+        // //- the second argument is the octomap
+        // //- arguments 3 and 4 can be used to restrict the distance map to a subarea
+        // //- argument 5 defines whether unknown space is treated as occupied or free
+        // //The constructor copies data but does not yet compute the distance map
+        // DynamicEDTOctomap distmap(maxDist, tree, min, max, unknownAsOccupied);
+
+        // //This computes the distance map
+        // distmap.update(); 
+
+        // //This is how you can query the map
+        // octomap::point3d p(5.0,5.0,0.6);
+        // //As we don't know what the dimension of the loaded map are, we modify this point
+        // p.x() = min.x() + 0.3 * (max.x() - min.x());
+        // p.y() = min.y() + 0.6 * (max.y() - min.y());
+        // p.z() = min.z() + 0.5 * (max.z() - min.z());
+
+        // octomap::point3d closestObst;
+        // float distance;
+
+        // distmap.getDistanceAndClosestObstacle(p, distance, closestObst);
+
+        // std::cout<<"\n\ndistance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
+        // if(distance < distmap.getMaxDist())
+        //     std::cout<<"closest obstacle to "<<p.x()<<","<<p.y()<<","<<p.z()<<" is at "<<closestObst.x()<<","<<closestObst.y()<<","<<closestObst.z()<<std::endl;
+
+        // //if you modify the octree via tree->insertScan() or tree->updateNode()
+        // //just call distmap.update() again to adapt the distance map to the changes made
+
+        // delete tree;
+        // return true;
         // We know we're working with a RealVectorStateSpace in this
         // example, so we downcast state into the specific type.
         const auto* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
 
         // Extract the robot's (x,y) position from its state
-        double x = state3D->values[0];
-        double y = state3D->values[1];
-        double z = state3D->values[2];
+        double x1 = state3D->values[0];
+        double y1 = state3D->values[1];
+        double z1 = state3D->values[2];
 
         // Distance formula between two points, offset by the circle's
         // radius
-        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) - 0.25;
+        double clearance = sqrt((x1-0.5)*(x1-0.5) + (y1-0.5)*(y1-0.5) + (z1-0.5)*(z1-0.5)) - 0.25;
+        std::cout << "Clearance: " << clearance << std::endl;
+        return clearance;
     }
 };
 
@@ -273,7 +327,7 @@ void plan(double runTime, optimalPlanner plannerType, planningObjective objectiv
         // Output the length of the path found
         std::cout
             << optimizingPlanner->getName()
-            << " found a solution of length "
+            << " OMPL found a solution of length "
             << pdef->getSolutionPath()->length()
             << " with an optimization objective value of "
             << pdef->getSolutionPath()->cost(pdef->getOptimizationObjective()) << std::endl;

@@ -71,7 +71,7 @@ void DLA2PathPlanner::convertOMPLPathToMsg() {
         const double &z_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
         // double z_s = 0.;
         double yaw_s = 0.;
-        ROS_INFO_STREAM("states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s);
+        ROS_INFO_STREAM("states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s << "; z_s: " << z_s);
 
         mav_planning_msgs::PolynomialSegment4D segment;
         segment.header = msg.header;
@@ -93,7 +93,7 @@ void DLA2PathPlanner::plan()
     auto space(std::make_shared<ob::RealVectorStateSpace>(3));
 
     // Set the bounds of space to be in [0,1].
-    space->setBounds(0.0, 1.0);
+    space->setBounds(0.0, 10.0);
 
     // Construct a space information instance for this state space
     auto si(std::make_shared<ob::SpaceInformation>(space));
