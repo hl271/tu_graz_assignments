@@ -48,6 +48,8 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+DynamicEDTOctomap *distmap;
+
 // An enum of supported optimal planners, alphabetical order
 enum optimalPlanner
 {
@@ -96,38 +98,9 @@ public:
     double clearance(const ob::State* state) const override
     {
         std::cout << "isValid Function" << std::endl;
-
-        // Initialize the ocTree obj
-        octomap::OcTree *tree = NULL;
-        tree = new octomap::OcTree(0.05);
-
-        // Read map.bt file into the ocTree obj
-        std::string path = ros::package::getPath("dla2_path_planner");        
-        std::cout << path << "/maps/geb079.bt \n";
-        tree->readBinary(path+"/maps/geb079.bt");
-
-        std::cout <<"read in tree, "<<tree->getNumLeafNodes()<<" leaves "<<std::endl;
-
-        double x,y,z;
-        tree->getMetricMin(x,y,z); // Output minimun value of the bounding space to x,y,z
-        octomap::point3d min(x,y,z); // Create variable min of type 3dpoint
-        //std::cout<<"Metric min: "<<x<<","<<y<<","<<z<<std::endl;
-        tree->getMetricMax(x,y,z);
-        octomap::point3d max(x,y,z);
-        //std::cout<<"Metric max: "<<x<<","<<y<<","<<z<<std::endl;
-
-        bool unknownAsOccupied = true;
-        unknownAsOccupied = false;
-        float maxDist = 1.0;
-        //- the first argument ist the max distance at which distance computations are clamped
-        //- the second argument is the octomap
-        //- arguments 3 and 4 can be used to restrict the distance map to a subarea
-        //- argument 5 defines whether unknown space is treated as occupied or free
-        //The constructor copies data but does not yet compute the distance map
-        DynamicEDTOctomap distmap(maxDist, tree, min, max, unknownAsOccupied);
-
-        //This computes the distance map
-        distmap.update(); 
+           
+        // //This computes the distance map
+        // distmap->update(); 
 
         const auto* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
@@ -147,10 +120,10 @@ public:
         octomap::point3d closestObst;
         float distance;
 
-        distmap.getDistanceAndClosestObstacle(p, distance, closestObst);
+        distmap->getDistanceAndClosestObstacle(p, distance, closestObst);
 
         std::cout<<"\n\ndistance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
-        if(distance < distmap.getMaxDist())
+        if(distance < distmap->getMaxDist())
             std::cout<<"closest obstacle to "<<p.x()<<","<<p.y()<<","<<p.z()<<" is at "<<closestObst.x()<<","<<closestObst.y()<<","<<closestObst.z()<<std::endl;
 
         // Distance formula between current state point and closestObst
@@ -159,7 +132,7 @@ public:
         //if you modify the octree via tree->insertScan() or tree->updateNode()
         //just call distmap.update() again to adapt the distance map to the changes made
 
-        delete tree;
+        
         // return true;
         // We know we're working with a RealVectorStateSpace in this
         // example, so we downcast state into the specific type.

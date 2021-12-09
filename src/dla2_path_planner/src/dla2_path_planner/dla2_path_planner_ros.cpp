@@ -88,15 +88,51 @@ void DLA2PathPlanner::convertOMPLPathToMsg() {
 
 void DLA2PathPlanner::plan()
 {
-    // Construct the robot state space in which we're planning. We're
-    // planning in [0,1]x[0,1], a subset of R^2.
-    auto space(std::make_shared<ob::RealVectorStateSpace>(3));
+    // Initialize the ocTree obj
+    octomap::OcTree *tree = NULL;
+    tree = new octomap::OcTree(0.05);
 
-    // Set the bounds of space to be in [0,1].
-    space->setBounds(0.0, 10.0);
+    // Read map.bt file into the ocTree obj
+    std::string path = ros::package::getPath("dla2_path_planner");        
+    std::cout << path << "/maps/power_plant.bt \n";
+    tree->readBinary(path+"/maps/power_plant.bt");
+
+    std::cout <<"read in tree, "<<tree->getNumLeafNodes()<<" leaves "<<std::endl;
+
+    double x,y,z;
+    tree->getMetricMin(x,y,z); // Output minimun value of the bounding space to x,y,z
+    octomap::point3d min(x,y,z); // Create variable min of type 3dpoint
+    //std::cout<<"Metric min: "<<x<<","<<y<<","<<z<<std::endl;
+    tree->getMetricMax(x,y,z);
+    octomap::point3d max(x,y,z);
+    //std::cout<<"Metric max: "<<x<<","<<y<<","<<z<<std::endl;
+
+    //Construct new distmap 
+    bool unknownAsOccupied = true;
+    unknownAsOccupied = false;
+    float maxDist = 1.0;
+    
+    //- the first argument ist the max distance at which distance computations are clamped
+    //- the second argument is the octomap
+    //- arguments 3 and 4 can be used to restrict the distance map to a subarea
+    //- argument 5 defines whether unknown space is treated as occupied or free
+    //The constructor copies data but does not yet compute the distance map
+
+    distmap = new DynamicEDTOctomap(maxDist, tree, min, max, unknownAsOccupied);    
+
+    distmap->update();
+    // Construct the robot state space in which we're planning. 
+    // IMPORTANT: Add dimension in accordance with the map's dimensions
+    auto space(std::make_shared<ob::RealVectorStateSpace>());
+    space->addDimension(min.x(), max.x()); 
+    space->addDimension(min.y(), max.y());
+    space->addDimension(min.z(), max.z());
+
+    std::cout << "[ ] space dimension: " << space->getDimension() << "\n";
 
     // Construct a space information instance for this state space
     auto si(std::make_shared<ob::SpaceInformation>(space));
+
 
     // Set the object used to check which states in the space are valid
     si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
@@ -164,4 +200,5 @@ void DLA2PathPlanner::plan()
         std::cout << "No solution found." << std::endl;
         traj_planning_successful = false;
     }
+    delete tree;
 }
