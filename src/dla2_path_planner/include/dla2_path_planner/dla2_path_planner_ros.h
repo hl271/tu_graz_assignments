@@ -65,6 +65,7 @@ private:
     std::string outputFile;
 
     void plan();
+    bool isValidPath();
 
     // ROS Topics
     ros::Subscriber current_position_sub;

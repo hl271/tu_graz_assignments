@@ -48,6 +48,8 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+// Initialize the ocTree obj
+octomap::OcTree *tree = NULL;
 DynamicEDTOctomap *distmap;
 
 // An enum of supported optimal planners, alphabetical order
@@ -97,7 +99,7 @@ public:
     // boundary of the circular obstacle.
     double clearance(const ob::State* state) const override
     {
-        std::cout << "isValid Function" << std::endl;
+        // std::cout << "isValid Function" << std::endl;
            
         // //This computes the distance map
         // distmap->update(); 
@@ -122,13 +124,10 @@ public:
 
         distmap->getDistanceAndClosestObstacle(p, distance, closestObst);
 
-        std::cout<<"\n\ndistance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
-        if(distance < distmap->getMaxDist())
-            std::cout<<"closest obstacle to "<<p.x()<<","<<p.y()<<","<<p.z()<<" is at "<<closestObst.x()<<","<<closestObst.y()<<","<<closestObst.z()<<std::endl;
-
+        // std::cout<<"Distance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
+        
         // Distance formula between current state point and closestObst
         double clearance = sqrt(pow(p.x()-closestObst.x(),2)+pow(p.y()-closestObst.y(),2)+pow(p.z()-closestObst.z(),2));
-        std::cout << "Clearance: "<< clearance;
         //if you modify the octree via tree->insertScan() or tree->updateNode()
         //just call distmap.update() again to adapt the distance map to the changes made
 

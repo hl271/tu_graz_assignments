@@ -86,10 +86,43 @@ void DLA2PathPlanner::convertOMPLPathToMsg() {
     }
 }
 
+bool DLA2PathPlanner::isValidPath() {
+    std::vector<ompl::base::State *> &states = p_last_traj_ompl->getStates();
+    size_t N = states.size();
+    for (size_t i = 1; i<N; i++) {
+        ompl::base::State *prev_s = states[i-1];
+        ompl::base::State *current_s = states[i];
+        const double &prev_x = prev_s->as<ob::RealVectorStateSpace::StateType>()->values[0];
+        const double &prev_y = prev_s->as<ob::RealVectorStateSpace::StateType>()->values[1];
+        const double &prev_z = prev_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        
+        const double &current_x = current_s->as<ob::RealVectorStateSpace::StateType>()->values[0];
+        const double &current_y = current_s->as<ob::RealVectorStateSpace::StateType>()->values[1];
+        const double &current_z = current_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        
+        octomap::point3d prev_point(prev_x, prev_y, prev_z);
+        octomap::point3d current_point(current_x, current_y, current_z);
+        octomap::point3d direction(current_x - prev_x, current_y - prev_y, current_z - prev_z);
+        float segment_length = sqrt(pow(current_x - prev_x,2)+pow(current_y - prev_y,2)+pow(current_z - prev_z,2));
+        octomap::point3d endpoint;
+        bool isObstacle = tree->castRay(prev_point, direction, endpoint, true, segment_length);
+        std::cout << "\nPrev point: " << prev_point << std::endl;
+        std::cout << "Current point: " << current_point << std::endl;
+        std::cout << "Direction vector: " << direction << std::endl;
+        std::cout << "Segment length: " << segment_length << std::endl;
+        std::cout << "Endpoint: " << endpoint << std::endl;
+        if (isObstacle) {
+            std::cout << "Collide with obstacle!" << std::endl;
+            return false;
+        };
+    }
+    std::cout << "Path is valid!!" <<std::endl;
+    return true;
+}
+
 void DLA2PathPlanner::plan()
 {
-    // Initialize the ocTree obj
-    octomap::OcTree *tree = NULL;
+    
     tree = new octomap::OcTree(0.05);
 
     // Read map.bt file into the ocTree obj
@@ -176,26 +209,34 @@ void DLA2PathPlanner::plan()
 
     if (solved)
     {
-        // Output the length of the path found
-        std::cout
-            << optimizingPlanner->getName()
-            << " found a solution of length "
-            << pdef->getSolutionPath()->length()
-            << " with an optimization objective value of "
-            << pdef->getSolutionPath()->cost(pdef->getOptimizationObjective()) << std::endl;
-
-        // If a filename was specified, output the path as a matrix to
-        // that file for visualization
-        if (!outputFile.empty())
-        {
-            std::ofstream outFile(outputFile.c_str());
-            std::static_pointer_cast<og::PathGeometric>(pdef->getSolutionPath())->
-                printAsMatrix(outFile);
-            outFile.close();
-        }
-
         p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pdef->getSolutionPath());
-        traj_planning_successful = true;
+        
+        if (isValidPath() ) {
+            // Output the length of the path found
+            std::cout
+                << optimizingPlanner->getName()
+                << " found a solution of length "
+                << pdef->getSolutionPath()->length()
+                << " with an optimization objective value of "
+                << pdef->getSolutionPath()->cost(pdef->getOptimizationObjective()) << std::endl;
+
+            // If a filename was specified, output the path as a matrix to
+            // that file for visualization
+            if (!outputFile.empty())
+            {
+                std::ofstream outFile(outputFile.c_str());
+                std::static_pointer_cast<og::PathGeometric>(pdef->getSolutionPath())->
+                    printAsMatrix(outFile);
+                outFile.close();
+            }
+
+            p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pdef->getSolutionPath());
+            traj_planning_successful = true;
+
+        } else {
+            std::cout << "This path go through walls!! No solution!" << std::endl;
+            traj_planning_successful = false;
+        }
     } else {
         std::cout << "No solution found." << std::endl;
         traj_planning_successful = false;
