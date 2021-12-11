@@ -99,11 +99,7 @@ public:
     // boundary of the circular obstacle.
     double clearance(const ob::State* state) const override
     {
-        // std::cout << "isValid Function" << std::endl;
-           
-        // //This computes the distance map
-        // distmap->update(); 
-
+        // std::cout << "isValid Function" << std::endl;       
         const auto* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
 
@@ -113,30 +109,17 @@ public:
         double z1 = state3D->values[2];
 
         //This is how you can query the map
-        octomap::point3d p(x1, y1, z1);
-        // //As we don't know what the dimension of the loaded map are, we modify this point
-        // p.x() = min.x() + 0.3 * (max.x() - min.x());
-        // p.y() = min.y() + 0.6 * (max.y() - min.y());
-        // p.z() = min.z() + 0.5 * (max.z() - min.z());
-
+        octomap::point3d p(x1, y1, z1);       
         octomap::point3d closestObst;
         float distance;
 
         distmap->getDistanceAndClosestObstacle(p, distance, closestObst);
 
-        // std::cout<<"Distance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
+        std::cout<<"Distance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
         
-        // Distance formula between current state point and closestObst
-        double clearance = sqrt(pow(p.x()-closestObst.x(),2)+pow(p.y()-closestObst.y(),2)+pow(p.z()-closestObst.z(),2));
         //if you modify the octree via tree->insertScan() or tree->updateNode()
         //just call distmap.update() again to adapt the distance map to the changes made
 
-        
-        // return true;
-        // We know we're working with a RealVectorStateSpace in this
-        // example, so we downcast state into the specific type.
-
-        // std::cout << "Clearance: " << clearance << std::endl;
         return (double) distance;
     }
 };
