@@ -192,26 +192,32 @@ void DLA2PathPlanner::plan()
     // Set the start and goal states
     pdef->setStartAndGoalStates(start, goal);
 
-    // Create the optimization objective specified by our command-line argument.
-    // This helper function is simply a switch statement.
-    pdef->setOptimizationObjective(allocateObjective(si, objectiveType));
+    // ** Specify OptimizationObjective Type
+    pdef->setOptimizationObjective(getBalancedObjective1(si));
 
     // Construct the optimal planner specified by our command line argument.
     // This helper function is simply a switch statement.
-    ob::PlannerPtr optimizingPlanner = allocatePlanner(si, plannerType);
 
+    // ** Specify planner Type 
+    // ? Why this still points to type <ob::Planner>?: auto optimizingPlanner(allocatePlanner(si, plannerType));
+    auto optimizingPlanner(std::make_shared<og::RRTstar>(si));
+    // ** Set maximun range (step size) for RRTStar planner
+    optimizingPlanner->setRange(15.0);
+    
     // Set the problem instance for our planner to solve
     optimizingPlanner->setProblemDefinition(pdef);
     optimizingPlanner->setup();
 
-    // attempt to solve the planning problem in the given runtime
-    ob::PlannerStatus solved = optimizingPlanner->solve(runTime);
+    // **IMPORTANT: The solve() method belongs to ob::Planner (inherited class of <og::<plannerType>>)
+    // TODO : Understand the meaning of the casting below
+    ob::PlannerStatus solved = optimizingPlanner->ob::Planner::solve(2.0);
 
     if (solved)
     {
         p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pdef->getSolutionPath());
         
         if (isValidPath() ) {
+            
             // Output the length of the path found
             std::cout
                 << optimizingPlanner->getName()
@@ -230,7 +236,7 @@ void DLA2PathPlanner::plan()
                 outFile.close();
             }
 
-            p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pdef->getSolutionPath());
+            // p_last_traj_ompl =  std::static_pointer_cast<og::PathGeometric>(path);
             traj_planning_successful = true;
 
         } else {

@@ -30,6 +30,9 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/SORRTstar.h>
 
+#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/geometric/PathGeometric.h>
+
 #include <dynamicEDT3D/dynamicEDTOctomap.h>
 
 
@@ -115,7 +118,7 @@ public:
 
         distmap->getDistanceAndClosestObstacle(p, distance, closestObst);
 
-        std::cout<<"Distance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
+        // std::cout<<"Distance at point "<<p.x()<<","<<p.y()<<","<<p.z()<<" is "<<distance<<std::endl;
         
         //if you modify the octree via tree->insertScan() or tree->updateNode()
         //just call distmap.update() again to adapt the distance map to the changes made
@@ -328,8 +331,8 @@ ob::OptimizationObjectivePtr getBalancedObjective1(const ob::SpaceInformationPtr
     auto opt(std::make_shared<ob::MultiOptimizationObjective>(si));
     // opt->addObjective(lengthObj, 10.0);
     // opt->addObjective(clearObj, 1.0);
-    opt->addObjective(lengthObj, 1.0);
-    opt->addObjective(clearObj, 10.0);
+    opt->addObjective(lengthObj, 1.5);
+    opt->addObjective(clearObj, 20.0);
 
     return ob::OptimizationObjectivePtr(opt);
 }

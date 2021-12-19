@@ -21,7 +21,7 @@ Testing instructions
 
 rosrun dla2_path_planner dla2_path_planner_ros_node
 
-rosrun dla2_path_planner dla2_path_planner_ros_node --runtime 10.0 --planner RRTStar -o WeightedLengthAndClearanceCombo -f planner_trajectory.txt --info 2
+rosrun dla2_path_planner dla2_path_planner_ros_node --runtime 5.0 --planner RRTStar -o WeightedLengthAndClearanceCombo -f planner_trajectory.txt --info 2
 
 rosrun dla2_path_planner dla2_path_planner_ros_node --runtime 0.5 --planner RRTStar  -f planner_trajectory.txt --info 2
 
@@ -36,16 +36,31 @@ rostopic pub /path_planner/current_position geometry_msgs/Point "x: 0
 y: 0
 z: 3" --once
 
+rostopic pub /path_planner/current_position geometry_msgs/Point "x: -7                                  
+y: -10
+z: 2" --once
+
 * To change the initial/goal position and plan a trajectory run:
 
 2D (master branch):
 rostopic pub /path_planner/goal_position mav_planning_msgs/Point2D "x: 0.9
 y: 0.9" --once
 
+* Test for different goal points
 3D (when using 3D version):
 rostopic pub /path_planner/goal_position geometry_msgs/Point "x: 10
 y: -27
-z: 15" --once
+z: 10" --once
+
+3D (when using 3D version):
+rostopic pub /path_planner/goal_position geometry_msgs/Point "x: 10
+y: -20
+z: 10" --once
+
+3D (when using 3D version):
+rostopic pub /path_planner/goal_position geometry_msgs/Point "x: 27
+y: -20
+z: 5" --once
 
 * To receive the planned trajectory on the terminal run:
 
