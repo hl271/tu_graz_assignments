@@ -66,6 +66,10 @@ private:
 
     void plan();
     bool isValidPath();
+    void run_simplifier(const ompl::base::SpaceInformationPtr &si, int runs);
+    void run_perturber(const ob::SpaceInformationPtr &si, int runs);
+    void run_BSpline(const ob::SpaceInformationPtr &si, int pass);
+
 
     // ROS Topics
     ros::Subscriber current_position_sub;
@@ -74,9 +78,12 @@ private:
     void currentPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
     void goalPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
     void convertOMPLPathToMsg();
+    void printOMPLPath();
     geometry_msgs::Point current_position, goal_position;
     bool traj_planning_successful;
     std::shared_ptr<ompl::geometric::PathGeometric> p_last_traj_ompl;
+    std::shared_ptr<ompl::geometric::PathGeometric> p_simplified_traj_ompl;
+    ompl::base::PathPtr pathPtr;
     mav_planning_msgs::PolynomialTrajectory4D last_traj_msg;
 };
 

@@ -55,7 +55,21 @@ void DLA2PathPlanner::goalPositionCallback(const geometry_msgs::Point::ConstPtr&
     }
 }
 
+void DLA2PathPlanner::printOMPLPath() {
+    std::vector<ompl::base::State *> &states = p_simplified_traj_ompl->getStates();
+    size_t N = states.size();
+    for (size_t i = 0; i<N; i++) {
+        ompl::base::State *p_s = states[i];
+        const double &x_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[0];
+        const double &y_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[1];
+        const double &z_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        // double z_s = 0.;
+        double yaw_s = 0.;
+        ROS_INFO_STREAM("states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s << "; z_s: " << z_s);
+    }
+}
 void DLA2PathPlanner::convertOMPLPathToMsg() {
+    //Reference &msg -> just another name for last_traj_msg
     mav_planning_msgs::PolynomialTrajectory4D &msg = last_traj_msg;
     msg.segments.clear();
 
@@ -120,6 +134,43 @@ bool DLA2PathPlanner::isValidPath() {
     return true;
 }
 
+void DLA2PathPlanner::run_simplifier(const ob::SpaceInformationPtr &si, int runs) {
+    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
+    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
+
+    double avg_costs=0.0;
+    ob::Cost original_cost = p_simplified_traj_ompl->cost(obj);
+    for (int i=0; i<runs; i++) {
+        simplifier.shortcutPath(*p_simplified_traj_ompl, 100, 100, 0.33, 0.025);
+        std::cout << "Cost of new path is: " << p_simplified_traj_ompl->cost(obj).value() << std::endl;
+        avg_costs += p_simplified_traj_ompl->cost(obj).value();
+    }
+    avg_costs /= runs;
+    std::cout << "Avg cost: " << avg_costs << "; Original cost: " << original_cost.value() << std::endl;
+}
+
+void DLA2PathPlanner::run_perturber(const ob::SpaceInformationPtr &si, int runs) {
+    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
+    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
+
+    double avg_costs=0.0;
+    ob::Cost original_cost = p_simplified_traj_ompl->cost(obj);
+    for (int i=0; i<runs; i++) {
+        // Pass in reference (or just another name of the type variable), REFERENCE != POINTER => pass in *Pointer
+        simplifier.perturbPath(*p_simplified_traj_ompl, 2.0, 100, 100, 0.025);
+        std::cout << "Cost of new path (perturber) is: " << p_simplified_traj_ompl->cost(obj).value() << std::endl;
+        avg_costs += p_simplified_traj_ompl->cost(obj).value();
+    }
+    avg_costs /= runs;
+    std::cout << "PERTURBER: Avg cost: " << avg_costs << "; Original cost: " << original_cost.value() << std::endl;
+    
+}
+
+void DLA2PathPlanner::run_BSpline(const ob::SpaceInformationPtr &si, int pass) {
+    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
+    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
+    simplifier.smoothBSpline(*p_simplified_traj_ompl, pass);
+}
 void DLA2PathPlanner::plan()
 {
     
@@ -214,7 +265,8 @@ void DLA2PathPlanner::plan()
 
     if (solved)
     {
-        p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pdef->getSolutionPath());
+        pathPtr = pdef->getSolutionPath();
+        p_last_traj_ompl =  std::static_pointer_cast<ompl::geometric::PathGeometric>(pathPtr);
         
         if (isValidPath() ) {
             
@@ -226,6 +278,16 @@ void DLA2PathPlanner::plan()
                 << " with an optimization objective value of "
                 << pdef->getSolutionPath()->cost(pdef->getOptimizationObjective()) << std::endl;
 
+            // ** Question: Can we pass a shared_pointer of simplified path to both of the below functions?
+            og::PathGeometric path(dynamic_cast<const og::PathGeometric&>(*pathPtr));
+            p_simplified_traj_ompl = std::make_shared<og::PathGeometric>(path);
+            run_simplifier(si, 20);
+            run_perturber(si, 20);
+            run_BSpline(si, 1);
+            printOMPLPath();
+            // int runs = 20;
+            
+
             // If a filename was specified, output the path as a matrix to
             // that file for visualization
             if (!outputFile.empty())
@@ -236,7 +298,7 @@ void DLA2PathPlanner::plan()
                 outFile.close();
             }
 
-            // p_last_traj_ompl =  std::static_pointer_cast<og::PathGeometric>(path);
+            
             traj_planning_successful = true;
 
         } else {
