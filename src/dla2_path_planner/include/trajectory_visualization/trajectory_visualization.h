@@ -32,6 +32,9 @@ public:
     } MarkersColor;
 
 private:
+    char marker_color_chr;
+    MarkersColor marker_color;
+
     // ROS subscribers
     ros::Subscriber trajectory_sub;
     void trajectoryCallback(const mav_planning_msgs::PolynomialTrajectory4D::ConstPtr &p_msg);
