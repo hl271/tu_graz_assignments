@@ -74,11 +74,12 @@ private:
     // ROS Topics
     ros::Subscriber current_position_sub;
     ros::Subscriber goal_position_sub;
+    ros::Publisher trajectory_pub_raw;
     ros::Publisher trajectory_pub;
     void currentPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
     void goalPositionCallback(const geometry_msgs::Point::ConstPtr& p_msg);
     void convertOMPLPathToMsg();
-    void printOMPLPath();
+    void convertOMPLPathSimplifiedToMsg();
     geometry_msgs::Point current_position, goal_position;
     bool traj_planning_successful;
     std::shared_ptr<ompl::geometric::PathGeometric> p_last_traj_ompl;

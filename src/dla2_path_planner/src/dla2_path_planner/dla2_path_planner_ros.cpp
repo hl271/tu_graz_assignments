@@ -16,6 +16,7 @@ DLA2PathPlanner::DLA2PathPlanner(ros::NodeHandle &n, ros::NodeHandle &pn, int ar
     // ROS topics
     current_position_sub = pnode_.subscribe("current_position", 10, &DLA2PathPlanner::currentPositionCallback, this);
     goal_position_sub = pnode_.subscribe("goal_position", 10, &DLA2PathPlanner::goalPositionCallback, this);
+    trajectory_pub_raw = pnode_.advertise<mav_planning_msgs::PolynomialTrajectory4D>("planned_trajectory_raw", 1);
     trajectory_pub = pnode_.advertise<mav_planning_msgs::PolynomialTrajectory4D>("planned_trajectory", 1);
 
     current_position.x = 0.; current_position.y = 0.; current_position.z = 0.;
@@ -49,13 +50,22 @@ void DLA2PathPlanner::goalPositionCallback(const geometry_msgs::Point::ConstPtr&
 
     if (traj_planning_successful) {
         convertOMPLPathToMsg();
+        trajectory_pub_raw.publish(last_traj_msg);
+        convertOMPLPathSimplifiedToMsg();
+        trajectory_pub.publish(last_traj_msg);
         mav_planning_msgs::PolynomialTrajectory4D::Ptr p_traj_msg = 
             mav_planning_msgs::PolynomialTrajectory4D::Ptr( new mav_planning_msgs::PolynomialTrajectory4D( last_traj_msg ) );
-        trajectory_pub.publish(last_traj_msg);
     }
 }
 
-void DLA2PathPlanner::printOMPLPath() {
+void DLA2PathPlanner::convertOMPLPathSimplifiedToMsg() {
+    //Reference &msg -> just another name for last_traj_msg
+    mav_planning_msgs::PolynomialTrajectory4D &msg = last_traj_msg;
+    msg.segments.clear();
+
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = "world"; // "odom"
+
     std::vector<ompl::base::State *> &states = p_simplified_traj_ompl->getStates();
     size_t N = states.size();
     for (size_t i = 0; i<N; i++) {
@@ -65,9 +75,21 @@ void DLA2PathPlanner::printOMPLPath() {
         const double &z_s = p_s->as<ob::RealVectorStateSpace::StateType>()->values[2];
         // double z_s = 0.;
         double yaw_s = 0.;
-        ROS_INFO_STREAM("states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s << "; z_s: " << z_s);
+        ROS_INFO_STREAM("Simplfied path: states["<< i <<"], x_s: " << x_s << "; y_s: " << y_s << "; z_s: " << z_s);
+
+        mav_planning_msgs::PolynomialSegment4D segment;
+        segment.header = msg.header;
+        segment.num_coeffs = 0;
+        segment.segment_time = ros::Duration(0.);
+        
+        segment.x.push_back(x_s);
+        segment.y.push_back(y_s);
+        segment.z.push_back(z_s);
+        segment.yaw.push_back(yaw_s);
+        msg.segments.push_back(segment);
     }
 }
+// TODO: Set param to input (p_last_traj_ompl || p_simplified_traj_ompl) into the below func
 void DLA2PathPlanner::convertOMPLPathToMsg() {
     //Reference &msg -> just another name for last_traj_msg
     mav_planning_msgs::PolynomialTrajectory4D &msg = last_traj_msg;
@@ -244,7 +266,7 @@ void DLA2PathPlanner::plan()
     pdef->setStartAndGoalStates(start, goal);
 
     // ** Specify OptimizationObjective Type
-    pdef->setOptimizationObjective(getBalancedObjective1(si));
+    pdef->setOptimizationObjective(getClearanceObjective(si));
 
     // Construct the optimal planner specified by our command line argument.
     // This helper function is simply a switch statement.
@@ -284,7 +306,6 @@ void DLA2PathPlanner::plan()
             run_simplifier(si, 20);
             run_perturber(si, 20);
             run_BSpline(si, 1);
-            printOMPLPath();
             // int runs = 20;
             
 

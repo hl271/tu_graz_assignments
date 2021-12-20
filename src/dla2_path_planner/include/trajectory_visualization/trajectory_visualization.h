@@ -31,16 +31,25 @@ public:
         DEEP_BLUE
     } MarkersColor;
 
+    typedef enum {
+        RAW = 0,
+        SIMPLIFIED
+    } TrajType;
+
 private:
     char marker_color_chr;
     MarkersColor marker_color;
+
+    char traj_type_chr;
+    TrajType traj_type;
 
     // ROS subscribers
     ros::Subscriber trajectory_sub;
     void trajectoryCallback(const mav_planning_msgs::PolynomialTrajectory4D::ConstPtr &p_msg);
 
     // ROS publishers
-    ros::Publisher rviz_markers_white_publisher;
+    ros::Publisher rviz_markers_publisher;
+
 };
 
 #endif // icg_trajectory_visualization_H

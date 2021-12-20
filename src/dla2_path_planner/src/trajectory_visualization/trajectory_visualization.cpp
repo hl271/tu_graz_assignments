@@ -2,10 +2,15 @@
 
 TrajectoryVisualization::TrajectoryVisualization(ros::NodeHandle &n, ros::NodeHandle &pn) {
     std::string marker_color_str;
+    std::string traj_type_str;
     pn.param("marker_color", marker_color_str, std::string("w"));
+    pn.param("traj_type", traj_type_str, std::string("w"));
     if (marker_color_str.length()<1) 
         marker_color_str = std::string("w");
+    if (traj_type_str.length()<1) 
+        traj_type_str = std::string("R");
     marker_color_chr = marker_color_str[0];
+    traj_type_chr = traj_type_str[0];
     switch (marker_color_chr) {
         case 'R': {
         marker_color = TrajectoryVisualization::RED;
@@ -29,6 +34,17 @@ TrajectoryVisualization::TrajectoryVisualization(ros::NodeHandle &n, ros::NodeHa
         marker_color = TrajectoryVisualization::WHITE;
         } break;
     }
+    switch (traj_type_chr) {
+        case 'R':
+            traj_type = TrajectoryVisualization::RAW;
+            break;
+        case 'S':
+            traj_type = TrajectoryVisualization::SIMPLIFIED;
+            break;
+        default:
+            traj_type = TrajectoryVisualization::RAW;
+            break;
+    }
 
     // ROS subscribers
     trajectory_sub = n.subscribe<mav_planning_msgs::PolynomialTrajectory4D>(
@@ -36,7 +52,8 @@ TrajectoryVisualization::TrajectoryVisualization(ros::NodeHandle &n, ros::NodeHa
                 &TrajectoryVisualization::trajectoryCallback, this);
 
     // ROS publishers
-    rviz_markers_white_publisher = pn.advertise<visualization_msgs::Marker>("trajectory_markers", 10, true);
+    if (traj_type == RAW) rviz_markers_publisher = pn.advertise<visualization_msgs::Marker>("trajectory_markers_raw", 10, true);
+    else if (traj_type == SIMPLIFIED) rviz_markers_publisher = pn.advertise<visualization_msgs::Marker>("trajectory_markers", 10, true);
 }
 
 void TrajectoryVisualization::trajectoryCallback(const mav_planning_msgs::PolynomialTrajectory4D::ConstPtr &p_msg) {
@@ -141,6 +158,6 @@ void TrajectoryVisualization::trajectoryCallback(const mav_planning_msgs::Polyno
     } 
 
     //case WHITE:
-    rviz_markers_white_publisher.publish(p_traj_edges);
-    rviz_markers_white_publisher.publish(p_traj_points);
+    rviz_markers_publisher.publish(p_traj_edges);
+    rviz_markers_publisher.publish(p_traj_points);
 }

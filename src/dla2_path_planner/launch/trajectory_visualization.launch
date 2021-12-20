@@ -3,14 +3,26 @@
   and setting the trajectory color using parameters.
 -->
 <launch>
-  <arg name="node_name" default="trajectory_visualization_raw" />
+  <arg name="node_name_raw" default="trajectory_visualization_raw" />
+  <arg name="node_name_simplified" default="trajectory_visualization_simplified" />
+
   <arg name="input_topic" default="/path_planner/planned_trajectory_raw" />
   <arg name="output_topic" default="trajectory_markers_raw" />
-  <arg name="marker_color" default="W" />
-	<node pkg="dla2_path_planner" type="dla2_path_planner_trajectory_visualization" name="$(arg node_name)" 
+
+  <arg name="marker_color_raw" default="W" />
+  <arg name="marker_color_simplified" default="O" />
+
+	<node pkg="dla2_path_planner" type="dla2_path_planner_trajectory_visualization" name="$(arg node_name_raw)" 
 		args="" output="screen">
+        <!-- The node actually subscribes to input_topic instead of "/path_planner/planned_trajectory" -->
         <remap from="/path_planner/planned_trajectory" to="$(arg input_topic)" />
         <remap from="~trajectory_markers" to="~$(arg output_topic)" />
-        <param name="marker_color" value="$(arg marker_color)" /> <!-- R:red, G:green, B:blue, O:orange, W:white, D:deep-blue -->
+        <param name="marker_color" value="$(arg marker_color_raw)" /> <!-- R:red, G:green, B:blue, O:orange, W:white, D:deep-blue -->
+        <param name="traj_type" value="R"/>  <!-- R: raw, S: simplfied-->
+	</node>
+  <node pkg="dla2_path_planner" type="dla2_path_planner_trajectory_visualization" name="$(arg node_name_simplified)" 
+		args="" output="screen">        
+        <param name="marker_color" value="$(arg marker_color_simplified)" /> <!-- R:red, G:green, B:blue, O:orange, W:white, D:deep-blue -->
+        <param name="traj_type" value="S"/>  <!-- R: raw, S: simplfied-->
 	</node>
 </launch>
