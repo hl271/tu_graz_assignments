@@ -35,7 +35,7 @@ SET( EXTRA_LIBS
 )
 
 find_package(cmake_modules REQUIRED)
-find_package(Eigen) 
+# find_package(Eigen) 
 find_package(Eigen3) 
 
 include_directories(
@@ -68,6 +68,11 @@ link_directories( ${OCTOMAP_LIBRARY_DIR})
 include_directories(${DYNAMICEDT3D_INCLUDE_DIRS})
 find_package(dynamicEDT3D REQUIRED)
 link_directories( ${DYNAMICEDT3D_LIBRARY_DIR} )
+
+# --- mav_trajectory_generation-----------------------
+find_package(mav_trajectory_generation REQUIRED)
+include_directories(${MAV_TRAJECTORY_GENERATION_INCLUDE_DIR})
+link_directories(${MAV_TRAJECTORY_GENERATION_LIBRARY_DIR})
 
 link_directories(/usr/local/lib)
 set(EXTRA_LIBS
@@ -105,6 +110,7 @@ ${EXTRA_LIBS}
 # target_link_libraries(exampleEDTOctomap dynamicedt3d)
 
 # --- DLA2 Path Planner Library ---
+# **SET(<VARIABLE> <...ALL RESOURCES THAT SET BY VARIABLE>)
 SET( SRC
 src/${PROJECT_NAME}/${PROJECT_NAME}_ros.cpp
 )
@@ -114,6 +120,8 @@ SET( HDR
   include/${PROJECT_NAME}/helper_functions.h
 )
 
+# -- **Specify which library to build** --# 
+# add_library(<Library Name> <..libraries>)
 add_library(${PROJECT_NAME}_ros SHARED ${SRC} ${HDR})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}_ros
     ${EXTRA_LIBS}
@@ -130,6 +138,18 @@ set (EXTRA_LIBS
 add_executable(${PROJECT_NAME}_ros_node src/main_ros_node.cpp )
 target_link_libraries(${PROJECT_NAME}_ros_node
     ${EXTRA_LIBS}
+)
+# -----------------------------
+
+# --- DLA3 Trajectory Generator Library ---
+set(DLA3_ROS_NODE_SOURCES
+		include/dla3_trajectory_generator/dla3_trajectory_generator_ros.h
+		src/dla3_trajectory_generator/dla3_trajectory_generator_ros.cc
+		src/dla3_ros_node.cc
+)
+add_executable(dla3_trajectory_generator ${DLA3_ROS_NODE_SOURCES})
+target_link_libraries(dla3_trajectory_generator
+		${EXTRA_LIBS}
 )
 # -----------------------------
 
