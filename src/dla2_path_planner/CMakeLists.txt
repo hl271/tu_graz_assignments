@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   mav_msgs
   mav_planning_msgs
   visualization_msgs
+  mav_trajectory_generation
+  mav_trajectory_generation_ros
   tf2
   tf2_ros
   nodelet
@@ -69,11 +71,11 @@ include_directories(${DYNAMICEDT3D_INCLUDE_DIRS})
 find_package(dynamicEDT3D REQUIRED)
 link_directories( ${DYNAMICEDT3D_LIBRARY_DIR} )
 
-# --- mav_trajectory_generation-----------------------
-find_package(mav_trajectory_generation REQUIRED)
-find_package(mav_trajectory_generation_ros REQUIRED)
-include_directories(${MAV_TRAJECTORY_GENERATION_INCLUDE_DIR})
-link_directories(${MAV_TRAJECTORY_GENERATION_LIBRARY_DIR})
+# # --- mav_trajectory_generation-----------------------
+# find_package(mav_trajectory_generation REQUIRED)
+# find_package(mav_trajectory_generation_ros REQUIRED)
+# include_directories(${MAV_TRAJECTORY_GENERATION_INCLUDE_DIR})
+# link_directories(${MAV_TRAJECTORY_GENERATION_LIBRARY_DIR})
 
 link_directories(/usr/local/lib)
 set(EXTRA_LIBS
@@ -81,6 +83,7 @@ set(EXTRA_LIBS
   ${OMPL_LIBRARIES}
   ${OCTOMAP_LIBRARIES}
   ${DYNAMICEDT3D_LIBRARIES}
+  ${MAV_TRAJECTORY_GENERATION_LIBRARIES}
 )
 
 # some_non_ros_library
@@ -143,15 +146,12 @@ target_link_libraries(${PROJECT_NAME}_ros_node
 # -----------------------------
 
 # --- DLA3 Trajectory Generator Library ---
-set(DLA3_ROS_NODE_SOURCES
-		include/dla3_trajectory_generator/dla3_trajectory_generator_ros.h
-		src/dla3_trajectory_generator/dla3_trajectory_generator_ros.cc
-		src/dla3_ros_node.cc
-)
-add_executable(dla3_trajectory_generator ${DLA3_ROS_NODE_SOURCES})
-target_link_libraries(dla3_trajectory_generator
-		${EXTRA_LIBS}
-)
+add_library(dla3_trajectory_generator src/dla3_trajectory_generator/dla3_trajectory_generator_ros.cc)
+target_link_libraries(dla3_trajectory_generator ${EXTRA_LIBS})
+
+add_executable(dla3_trajectory_generator_ros_node src/dla3_ros_node.cc)
+target_link_libraries(dla3_trajectory_generator_ros_node dla3_trajectory_generator)
+
 # -----------------------------
 
 # --- trajectory visualization --- 
