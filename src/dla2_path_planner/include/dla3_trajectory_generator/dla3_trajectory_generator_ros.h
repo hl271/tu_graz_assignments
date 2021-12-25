@@ -1,14 +1,15 @@
-#ifndef MAV_TRAJECTORY_GENERATOR_H
-#define MAV_TRAJECTORY_GENERATOR_H
+#ifndef DLA3_MAV_TRAJECTORY_GENERATOR_H
+#define DLA3_MAV_TRAJECTORY_GENERATOR_H
 
 #include <iostream>
 #include <ros/ros.h>
 #include <Eigen/Dense>
 #include <nav_msgs/Odometry.h>
 #include <eigen_conversions/eigen_msg.h>
-#include <mav_trajectory_generation/polynomial_optimization_nonlinear.h>
-#include <mav_trajectory_generation_ros/ros_visualization.h>
-#include <mav_trajectory_generation_ros/ros_conversions.h>
+#include <mav_trajectory_generation>
+// #include <mav_trajectory_generation/polynomial_optimization_nonlinear.h>
+// #include <mav_trajectory_generation_ros/ros_visualization.h>
+// #include <mav_trajectory_generation_ros/ros_conversions.h>
 
 class ExamplePlanner {
  public:

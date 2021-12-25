@@ -25,7 +25,7 @@ IF(catkin_FOUND)
   catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}_ros
-    CATKIN_DEPENDS roscpp std_msgs tf2 tf2_ros nodelet mav_msgs mav_planning_msgs visualization_msgs
+    CATKIN_DEPENDS roscpp std_msgs tf2 tf2_ros nodelet mav_msgs mav_planning_msgs visualization_msgs mav_trajectory_generation mav_trajectory_generation_ros
   )
 ENDIF(catkin_FOUND)
 
@@ -71,6 +71,7 @@ link_directories( ${DYNAMICEDT3D_LIBRARY_DIR} )
 
 # --- mav_trajectory_generation-----------------------
 find_package(mav_trajectory_generation REQUIRED)
+find_package(mav_trajectory_generation_ros REQUIRED)
 include_directories(${MAV_TRAJECTORY_GENERATION_INCLUDE_DIR})
 link_directories(${MAV_TRAJECTORY_GENERATION_LIBRARY_DIR})
 

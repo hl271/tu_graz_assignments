@@ -38,6 +38,9 @@
   <run_depend>tf2_ros</run_depend>
   <run_depend>nodelet</run_depend>
 
+  <run_depend>mav_trajectory_generation</run_depend>
+  <run_depend>mav_trajectory_generation_ros</run_depend>
+
   <!--
   <export>
     <nodelet plugin="${prefix}/dla2_path_planner_ros_nodelet.xml"/>
