@@ -6,16 +6,17 @@
 
 ### 1. Install every dependency listed on the CMakeLists.txt and/or in the package.xml file. 
 #### Important packages including:
-* For assignment 2:
+**For assignment 2**:
 - OMPL
 - Octomap
 - DynamicEDT3D
-* For assignment 3:
+
+**For assignment 3**:
 - mav_trajectory_generation
 
-sudo apt install ros-melodic-ompl*
+``sudo apt install ros-melodic-ompl*``
 
-inside the src workspace folder: git clone https://github.com/ethz-asl/mav_comm.git
+inside the src workspace folder: ``git clone https://github.com/ethz-asl/mav_comm.git``
 
 2. Download this package inside the src folder of your ROS workspace.
 
@@ -26,7 +27,7 @@ inside the src workspace folder: git clone https://github.com/ethz-asl/mav_comm.
 
 * To start the ROS node run either of:
 
-rosrun dla2_path_planner dla2_path_planner_ros_node
+``rosrun dla2_path_planner dla2_path_planner_ros_node``
 
 rosrun dla2_path_planner dla2_path_planner_ros_node --runtime 5.0 --planner RRTStar -o WeightedLengthAndClearanceCombo -f planner_trajectory.txt --info 2
 
