@@ -1,10 +1,17 @@
-Drones' Lecture Assigment 2 - Path Planner
+# Drones' Lecture Assigment 2, 3 - Path Planner & Trajectory Generation
 ------------------------------------------
 
-Compilation instructions
+## I. Compilation instructions
 ------------------------
 
-1. Install every dependency listed on the CMakeLists.txt and/or in the package.xml file. In particular the ompl library:
+### 1. Install every dependency listed on the CMakeLists.txt and/or in the package.xml file. 
+#### Important packages including:
+* For assignment 2:
+- OMPL
+- Octomap
+- DynamicEDT3D
+* For assignment 3:
+- mav_trajectory_generation
 
 sudo apt install ros-melodic-ompl*
 
@@ -14,7 +21,7 @@ inside the src workspace folder: git clone https://github.com/ethz-asl/mav_comm.
 
 3. Compile it using either the command 'catkin_make' or 'catkin build'.
 
-Testing instructions
+## 2. Testing instructions
 --------------------
 
 * To start the ROS node run either of:
