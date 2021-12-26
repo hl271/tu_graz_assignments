@@ -10,14 +10,15 @@
 #include <mav_trajectory_generation_ros/ros_visualization.h>
 #include <mav_trajectory_generation_ros/ros_conversions.h>
 
-class ExamplePlanner {
+class TrajectoryGenerator {
  public:
-  ExamplePlanner(ros::NodeHandle& nh);
+  TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& pn);
 
   void uavOdomCallback(const nav_msgs::Odometry::ConstPtr& pose);
 
   void setMaxSpeed(double max_v);
 
+  void planTrajectory(const mav_trajectory_generation::Vertex::Vector& vertices, mav_trajectory_generation::Trajectory* trajectory);
   // Plans a trajectory to take off from the current position and
   // fly to the given altitude (while maintaining x,y, and yaw).
   bool planTrajectory(const Eigen::VectorXd& goal_pos,
@@ -37,8 +38,12 @@ class ExamplePlanner {
   ros::Publisher pub_markers_;
   ros::Publisher pub_trajectory_;
   ros::Subscriber sub_odom_;
+  ros::Subscriber simplified_traj_sub;
+  void trajectoryCallback(const mav_planning_msgs::PolynomialTrajectory4D::ConstPtr &p_msg);
+
 
   ros::NodeHandle& nh_;
+  ros::NodeHandle& pnode_;
   Eigen::Affine3d current_pose_;
   Eigen::Vector3d current_velocity_;
   Eigen::Vector3d current_angular_velocity_;
