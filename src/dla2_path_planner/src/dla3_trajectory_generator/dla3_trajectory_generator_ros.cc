@@ -191,10 +191,11 @@ bool TrajectoryGenerator::publishTrajectory(const mav_trajectory_generation::Tra
   pub_markers_.publish(markers);
 
   // send trajectory to be executed on UAV
-  mav_planning_msgs::PolynomialTrajectory msg;
+  mav_planning_msgs::PolynomialTrajectory4D msg;
   mav_trajectory_generation::trajectoryToPolynomialTrajectoryMsg(trajectory,
                                                                  &msg);
   msg.header.frame_id = "world";
+  ROS_INFO("Publishing trajectory to /trajectory_generator/trajectory...");
   pub_trajectory_.publish(msg);
 
   return true;

@@ -18,8 +18,10 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   mav_trajectory_generation
   mav_trajectory_generation_ros
+  trajectory_msgs
   tf2
   tf2_ros
+  tf
   nodelet
 )
 
@@ -27,7 +29,7 @@ IF(catkin_FOUND)
   catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}_ros
-    CATKIN_DEPENDS roscpp std_msgs tf2 tf2_ros nodelet mav_msgs mav_planning_msgs visualization_msgs mav_trajectory_generation mav_trajectory_generation_ros
+    CATKIN_DEPENDS roscpp std_msgs tf tf2 tf2_ros nodelet mav_msgs mav_planning_msgs visualization_msgs mav_trajectory_generation mav_trajectory_generation_ros trajectory_msgs
   )
 ENDIF(catkin_FOUND)
 
@@ -106,13 +108,6 @@ ${EXTRA_LIBS}
 )
 # ------------------------------------
 
-
-
-
-
-# add_executable(exampleEDTOctomap src/exampleEDTOctomap.cpp)
-# target_link_libraries(exampleEDTOctomap dynamicedt3d)
-
 # --- DLA2 Path Planner Library ---
 # **SET(<VARIABLE> <...ALL RESOURCES THAT SET BY VARIABLE>)
 SET( SRC
@@ -138,7 +133,6 @@ set (EXTRA_LIBS
     ${PROJECT_NAME}_ros
 )
 
-##
 add_executable(${PROJECT_NAME}_ros_node src/main_ros_node.cpp )
 target_link_libraries(${PROJECT_NAME}_ros_node
     ${EXTRA_LIBS}
@@ -153,6 +147,13 @@ add_executable(dla3_trajectory_generator_ros_node src/dla3_ros_node.cc)
 target_link_libraries(dla3_trajectory_generator_ros_node dla3_trajectory_generator)
 
 # -----------------------------
+
+# --- DLA3 Trajectory Sampler ---
+add_library(dla3_trajectory_sampler src/dla3_trajectory_sampler/dla3_trajectory_sampler_ros.cc)
+target_link_libraries(dla3_trajectory_sampler ${EXTRA_LIBS})
+
+add_executable(dla3_trajectory_sampler_ros_node src/dla3_trajectory_sampler_node.cc)
+target_link_libraries(dla3_trajectory_sampler_ros_node dla3_trajectory_sampler)
 
 # --- trajectory visualization --- 
 set(${PROJECT_NAME}_trajectory_visualization_ROS_NODE_SOURCES
