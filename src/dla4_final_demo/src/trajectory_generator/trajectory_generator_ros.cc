@@ -5,6 +5,8 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
     pnode_(pn),
     max_v_(2.0),
     max_a_(2.0),
+    max_s_(0.5),
+    max_j_(0.5),
     current_velocity_(Eigen::Vector3d::Zero()),
     current_pose_(Eigen::Affine3d::Identity()) {
       
@@ -14,10 +16,16 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
                 &TrajectoryGenerator::trajectoryCallback, this);
   // Load params
   if (!nh_.getParam(ros::this_node::getName() + "/max_v", max_v_)){
-    ROS_WARN("[example_planner] param max_v not found");
+    ROS_WARN("[trajectory_generator] param max_v not found");
   }
   if (!nh_.getParam(ros::this_node::getName() + "/max_a", max_a_)){
-    ROS_WARN("[example_planner] param max_a not found");
+    ROS_WARN("[trajectory_generator] param max_a not found");
+  }
+  if (!nh_.getParam(ros::this_node::getName() + "/max_j", max_j_)){
+    ROS_WARN("[trajectory_generator] param max_a not found");
+  }
+  if (!nh_.getParam(ros::this_node::getName() + "/max_s", max_s_)){
+    ROS_WARN("[trajectory_generator] param max_a not found");
   }
 
   // create publisher for RVIZ markers
@@ -98,6 +106,9 @@ void TrajectoryGenerator::planTrajectory(const mav_trajectory_generation::Vertex
   //add constraints
   opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, max_v_);
   opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, max_a_);
+  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::JERK, max_j_);
+  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::SNAP, max_s_);
+
   //solve
   opt.optimize();
   opt.getTrajectory(&(*trajectory));

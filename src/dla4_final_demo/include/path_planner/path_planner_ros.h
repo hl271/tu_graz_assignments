@@ -66,9 +66,9 @@ private:
 
     void plan();
     bool isValidPath();
-    void run_simplifier(const ompl::base::SpaceInformationPtr &si, int runs);
-    void run_perturber(const ob::SpaceInformationPtr &si, int runs);
-    void run_BSpline(const ob::SpaceInformationPtr &si, int pass);
+    void run_simplifier(ompl::geometric::PathSimplifier &simplifier, const ompl::base::OptimizationObjectivePtr &obj, int runs);
+    void run_perturber(ompl::geometric::PathSimplifier &simplifier,const ompl::base::OptimizationObjectivePtr &obj, int runs);
+    void run_BSpline(ompl::geometric::PathSimplifier &simplifier,  int pass);
 
 
     // ROS Topics

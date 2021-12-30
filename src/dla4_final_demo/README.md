@@ -74,10 +74,6 @@ z: 1.10" --once``
 
 #### To change the initial/goal position and plan a trajectory run:
 
-``rostopic pub /path_planner/goal_position geometry_msgs/Point "x: -1.75                                  
-y: 0.00
-z: 1.50" --once``
-
 ``rostopic pub /path_planner/goal_position geometry_msgs/Point "x: -0.03                                  
 y: 0.13
 z: 0.35" --once``
@@ -89,6 +85,10 @@ z: 1.50" --once``
 ``rostopic pub /path_planner/goal_position geometry_msgs/Point "x: -0.03                                  
 y: 0.13
 z: 1.10" --once``
+
+``rostopic pub /path_planner/goal_position geometry_msgs/Point "x: -1.75                                  
+y: 0.00
+z: 1.50" --once``
 
 ### (Optional) To receive the planned trajectory on the terminal run:
 

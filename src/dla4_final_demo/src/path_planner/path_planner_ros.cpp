@@ -156,14 +156,13 @@ bool DLA2PathPlanner::isValidPath() {
     return true;
 }
 
-void DLA2PathPlanner::run_simplifier(const ob::SpaceInformationPtr &si, int runs) {
-    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
-    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
-
+void DLA2PathPlanner::run_simplifier(og::PathSimplifier &simplifier, const ob::OptimizationObjectivePtr &obj, int runs) {
+    
+    
     double avg_costs=0.0;
     ob::Cost original_cost = p_simplified_traj_ompl->cost(obj);
     for (int i=0; i<runs; i++) {
-        simplifier.shortcutPath(*p_simplified_traj_ompl, 100, 100, 0.33, 0.025);
+        simplifier.shortcutPath(*p_simplified_traj_ompl, 100, 100, 0.33, 0.1);
         std::cout << "Cost of new path is: " << p_simplified_traj_ompl->cost(obj).value() << std::endl;
         avg_costs += p_simplified_traj_ompl->cost(obj).value();
     }
@@ -171,10 +170,8 @@ void DLA2PathPlanner::run_simplifier(const ob::SpaceInformationPtr &si, int runs
     std::cout << "Avg cost: " << avg_costs << "; Original cost: " << original_cost.value() << std::endl;
 }
 
-void DLA2PathPlanner::run_perturber(const ob::SpaceInformationPtr &si, int runs) {
-    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
-    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
-
+void DLA2PathPlanner::run_perturber(og::PathSimplifier &simplifier, const ob::OptimizationObjectivePtr &obj, int runs) {
+    
     double avg_costs=0.0;
     ob::Cost original_cost = p_simplified_traj_ompl->cost(obj);
     for (int i=0; i<runs; i++) {
@@ -188,9 +185,8 @@ void DLA2PathPlanner::run_perturber(const ob::SpaceInformationPtr &si, int runs)
     
 }
 
-void DLA2PathPlanner::run_BSpline(const ob::SpaceInformationPtr &si, int pass) {
-    ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
-    og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
+void DLA2PathPlanner::run_BSpline(og::PathSimplifier &simplifier, int pass) {
+    
     simplifier.smoothBSpline(*p_simplified_traj_ompl, pass);
 }
 void DLA2PathPlanner::plan()
@@ -303,9 +299,12 @@ void DLA2PathPlanner::plan()
             // ** Question: Can we pass a shared_pointer of simplified path to both of the below functions?
             og::PathGeometric path(dynamic_cast<const og::PathGeometric&>(*pathPtr));
             p_simplified_traj_ompl = std::make_shared<og::PathGeometric>(path);
-            run_simplifier(si, 20);
-            run_perturber(si, 20);
-            run_BSpline(si, 1);
+            ob::OptimizationObjectivePtr obj(new ob::MaximizeMinClearanceObjective(si));
+            og::PathSimplifier simplifier(si, ob::GoalPtr(), obj);
+
+            run_simplifier(simplifier, obj, 10);
+            // run_perturber(simplifier, obj,  20);
+            // run_BSpline(simplifier, 1);
             // int runs = 20;
             
 
