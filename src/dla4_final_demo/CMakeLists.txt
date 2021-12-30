@@ -1,0 +1,155 @@
+cmake_minimum_required(VERSION 2.8)
+project(dla4_final_demo)
+
+set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_VERBOSE_MAKEFILE false)
+
+#------------- PARAMETERS ------------------------------------
+set(SOME_NON_ROS_LIBRARY_DIR $ENV{SOME_NON_ROS_LIBRARY_DIR})
+
+#-------------CATKIN build system ---------------------------
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  geometry_msgs
+  mav_msgs
+  mav_planning_msgs
+  visualization_msgs
+  mav_trajectory_generation
+  mav_trajectory_generation_ros
+  trajectory_msgs
+  tf2
+  tf2_ros
+  tf
+  nodelet
+)
+
+IF(catkin_FOUND)
+  catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES path_planner_ros
+    CATKIN_DEPENDS roscpp std_msgs tf tf2 tf2_ros nodelet mav_msgs mav_planning_msgs visualization_msgs mav_trajectory_generation mav_trajectory_generation_ros trajectory_msgs
+  )
+ENDIF(catkin_FOUND)
+
+SET( EXTRA_LIBS
+    ${EXTRA_LIBS}
+    ${catkin_LIBRARIES}
+)
+
+find_package(cmake_modules REQUIRED)
+# find_package(Eigen) 
+find_package(Eigen3) 
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  include
+  ${EIGEN3_INCLUDE_DIR}
+)
+
+#-------------CATKIN end-------------------------------------
+#ADD_DEFINITIONS("-std=c++11")
+#ADD_DEFINITIONS("-std=c++0x")
+
+#-----------------------------------------------------------------------------
+
+# ompl
+find_package(ompl REQUIRED)
+#   checking ompl cmake variables while running: "catkin build"
+# message(WARNING "OMPL_INCLUDE_DIRS: " ${OMPL_INCLUDE_DIRS})
+# message(WARNING "OMPL_LIBRARY_DIR: " ${OMPL_LIBRARY_DIR})
+# message(WARNING "OMPL_LIBRARIES: " ${OMPL_LIBRARIES})
+include_directories( ${OMPL_INCLUDE_DIRS} )
+link_directories( ${OMPL_LIBRARY_DIR})
+# ---- OCTOMAP ------------------------
+find_package(octomap REQUIRED)
+include_directories(${OCTOMAP_INCLUDE_DIRS})
+link_directories( ${OCTOMAP_LIBRARY_DIR})
+
+# ---- dynamicEDT3D -------------------------
+include_directories(${DYNAMICEDT3D_INCLUDE_DIRS})
+find_package(dynamicEDT3D REQUIRED)
+link_directories( ${DYNAMICEDT3D_LIBRARY_DIR} )
+
+# # --- mav_trajectory_generation-----------------------
+# find_package(mav_trajectory_generation REQUIRED)
+# find_package(mav_trajectory_generation_ros REQUIRED)
+# include_directories(${MAV_TRAJECTORY_GENERATION_INCLUDE_DIR})
+# link_directories(${MAV_TRAJECTORY_GENERATION_LIBRARY_DIR})
+
+link_directories(/usr/local/lib)
+set(EXTRA_LIBS
+  ${EXTRA_LIBS}
+  ${OMPL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+  ${DYNAMICEDT3D_LIBRARIES}
+  ${MAV_TRAJECTORY_GENERATION_LIBRARIES}
+)
+
+# some_non_ros_library
+#SET(EXTRA_LIBS
+#  ${EXTRA_LIBS}
+#  # some_non_ros_library
+#)
+#include_directories( ${SOME_NON_ROS_LIBRARY_DIR}/src )
+#link_directories( ${SOME_NON_ROS_LIBRARY_DIR}/build )
+#link_directories(/usr/local/lib)
+#set(EXTRA_LIBS
+#  ${EXTRA_LIBS}
+#  ${SOME_NON_ROS_LIBRARIES}
+#)
+
+# --- (DLA2) Path Planner Library ---
+add_library(path_planner_ros SHARED include/path_planner/path_planner_ros.h include/path_planner/helper_functions.h src/path_planner/path_planner_ros.cpp)
+target_link_libraries(path_planner_ros ${EXTRA_LIBS})
+
+add_executable(path_planner_ros_node src/path_planner_ros_node.cpp)
+target_link_libraries(path_planner_ros_node path_planner_ros)
+# -----------------------------
+
+# --- (DLA3) Trajectory Generator Library ---
+add_library(trajectory_generator_ros src/trajectory_generator/trajectory_generator_ros.cc)
+target_link_libraries(trajectory_generator_ros ${EXTRA_LIBS})
+
+add_executable(trajectory_generator_ros_node src/trajectory_generator_ros_node.cc)
+target_link_libraries(trajectory_generator_ros_node trajectory_generator_ros)
+
+# -----------------------------
+
+# --- (DLA3) Trajectory Sampler ---
+add_library(trajectory_sampler_ros src/trajectory_sampler/trajectory_sampler_ros.cc)
+target_link_libraries(trajectory_sampler_ros ${EXTRA_LIBS})
+
+add_executable(trajectory_sampler_ros_node src/trajectory_sampler_ros_node.cc)
+target_link_libraries(trajectory_sampler_ros_node trajectory_sampler_ros)
+
+# --- trajectory visualization --- 
+set(trajectory_visualization_ros
+		include/trajectory_visualization/trajectory_visualization.h
+		src/trajectory_visualization/trajectory_visualization.cpp
+		src/trajectory_visualization_ros_node.cpp
+)
+add_executable(trajectory_visualization_ros_node ${trajectory_visualization_ros})
+target_link_libraries(trajectory_visualization_ros_node
+		${catkin_LIBRARIES}
+)
+# --------------------------------
+
+# ## Mark executables and/or libraries for installation
+# install(TARGETS ${PROJECT_NAME}_ros_node ${PROJECT_NAME}_ros
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
+# ## Mark cpp header files for installation
+# install(DIRECTORY ./
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".git" EXCLUDE
+# )
+
+# ## Mark other files for installation (e.g. launch and bag files, etc.)
+# install(FILES launch/${PROJECT_NAME}_ros_node.launch
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
