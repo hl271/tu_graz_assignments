@@ -4,7 +4,7 @@
 -->
 <launch>
   <arg name="node_name_raw" default="trajectory_visualization_raw" />
-  <arg name="node_name_simplified" default="trajectory_visualization_simplified" />
+  <arg name="node_name_simplified" default="trajectory_visualization" />
 
   <arg name="input_topic" default="/path_planner/planned_trajectory_raw" />
   <arg name="output_topic" default="trajectory_markers_raw" />

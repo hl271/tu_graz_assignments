@@ -13,7 +13,7 @@
 
     <!--- Trajectory sampler -->
     <node name="sampler" pkg="dla4_final_demo" type="trajectory_sampler_ros_node" output="screen">
-        <remap from="trajectory_4D" to="/trajectory_generator/trajectory"/>
+        <remap from="trajectory_4D" to="/trajectory_generator/smooth_trajectory"/>
     </node>
     
 

@@ -30,10 +30,10 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
 
   // create publisher for RVIZ markers
   pub_markers_ =
-      pnode_.advertise<visualization_msgs::MarkerArray>("trajectory_markers", 0);
+      pnode_.advertise<visualization_msgs::MarkerArray>("smooth_trajectory_markers", 0);
 
   pub_trajectory_ =
-      pnode_.advertise<mav_planning_msgs::PolynomialTrajectory4D>("trajectory",
+      pnode_.advertise<mav_planning_msgs::PolynomialTrajectory4D>("smooth_trajectory",
                                                               0);
 
   // subscriber for Odometry
@@ -114,78 +114,6 @@ void TrajectoryGenerator::planTrajectory(const mav_trajectory_generation::Vertex
   opt.getTrajectory(&(*trajectory));
 
 }
-// Plans a trajectory from the current position to the a goal position and velocity
-// we neglect attitude here for simplicity
-bool TrajectoryGenerator::planTrajectory(const Eigen::VectorXd& goal_pos,
-                                    const Eigen::VectorXd& goal_vel,
-                                    mav_trajectory_generation::Trajectory* trajectory) {
-
-
-  // 3 Dimensional trajectory => through carteisan space, no orientation
-  const int dimension = 3;
-
-  // Array for all waypoints and their constrains
-  mav_trajectory_generation::Vertex::Vector vertices;
-
-  // Optimze up to 4th order derivative (SNAP)
-  const int derivative_to_optimize =
-      mav_trajectory_generation::derivative_order::SNAP;
-
-  // we have 2 vertices:
-  // Start = current position
-  // end = desired position and velocity
-  mav_trajectory_generation::Vertex start(dimension), end(dimension);
-
-
-  /******* Configure start point *******/
-  // set start point constraints to current position and set all derivatives to zero
-  start.makeStartOrEnd(current_pose_.translation(),
-                       derivative_to_optimize);
-
-  // set start point's velocity to be constrained to current velocity
-  start.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY,
-                      current_velocity_);
-
-  // add waypoint to list
-  vertices.push_back(start);
-
-
-  /******* Configure end point *******/
-  // set end point constraints to desired position and set all derivatives to zero
-  end.makeStartOrEnd(goal_pos,
-                     derivative_to_optimize);
-
-  // set start point's velocity to be constrained to current velocity
-  end.addConstraint(mav_trajectory_generation::derivative_order::VELOCITY,
-                    goal_vel);
-
-  // add waypoint to list
-  vertices.push_back(end);
-
-  // setimate initial segment times
-  std::vector<double> segment_times;
-  segment_times = estimateSegmentTimes(vertices, max_v_, max_a_);
-
-  // Set up polynomial solver with default params
-  mav_trajectory_generation::NonlinearOptimizationParameters parameters;
-
-  // set up optimization problem
-  const int N = 10;
-  mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt(dimension, parameters);
-  opt.setupFromVertices(vertices, segment_times, derivative_to_optimize);
-
-  // constrain velocity and acceleration
-  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, max_v_);
-  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, max_a_);
-
-  // solve trajectory
-  opt.optimize();
-
-  // get trajectory as polynomial parameters
-  opt.getTrajectory(&(*trajectory));
-
-  return true;
-}
 
 bool TrajectoryGenerator::publishTrajectory(const mav_trajectory_generation::Trajectory& trajectory){
   ROS_INFO("Publishing trajectory to RViz...");
@@ -206,7 +134,7 @@ bool TrajectoryGenerator::publishTrajectory(const mav_trajectory_generation::Tra
   mav_trajectory_generation::trajectoryToPolynomialTrajectoryMsg(trajectory,
                                                                  &msg);
   msg.header.frame_id = "world";
-  ROS_INFO("Publishing trajectory to /trajectory_generator/trajectory...");
+  ROS_INFO("Publishing trajectory to /trajectory_generator/smooth_trajectory...");
   pub_trajectory_.publish(msg);
 
   return true;

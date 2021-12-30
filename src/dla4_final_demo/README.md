@@ -90,6 +90,11 @@ z: 1.10" --once``
 y: 0.00
 z: 1.50" --once``
 
+### Rosbag record
+- Record using rosbag for each pair of waypoints
+```
+rosbag record -O WP3_to_WP4 /path_planner/planned_trajectory /path_planner/planned_trajectory_raw /trajectory_generator/smooth_trajectory /trajectory_generator/smooth_trajectory_markers /trajectory_visualization/trajectory_markers /trajectory_visualization_raw/trajectory_markers_raw
+```
 ### (Optional) To receive the planned trajectory on the terminal run:
 
 ``rostopic echo /path_planner/planned_trajectory``
