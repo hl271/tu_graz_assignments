@@ -5,6 +5,8 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
     pnode_(pn),
     max_v_(2.0),
     max_a_(2.0),
+    max_j_(0.5),
+    max_s_(1.5),
     current_velocity_(Eigen::Vector3d::Zero()),
     current_pose_(Eigen::Affine3d::Identity()) {
       
@@ -18,6 +20,12 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
   }
   if (!nh_.getParam(ros::this_node::getName() + "/max_a", max_a_)){
     ROS_WARN("[example_planner] param max_a not found");
+  }
+  if (!nh_.getParam(ros::this_node::getName() + "/max_j", max_j_)){
+    ROS_WARN("[trajectory_generator] param max_j not found");
+  }
+  if (!nh_.getParam(ros::this_node::getName() + "/max_s", max_s_)){
+    ROS_WARN("[trajectory_generator] param max_s not found");
   }
 
   // create publisher for RVIZ markers
@@ -35,7 +43,7 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle& nh, ros::NodeHandle& p
 
 // trajectory Callback for simplified Path
 void TrajectoryGenerator::trajectoryCallback(const mav_planning_msgs::PolynomialTrajectory4D::ConstPtr &p_msg) {
-  ROS_INFO("Received simplified path. Generating Trajectory...");
+  ROS_INFO("Received raw path. Generating Trajectory...");
   // *** Conversion to mav_trajectory_generation::Vertex::Vector ***
     // Create the vertices for the points and lines
     const mav_planning_msgs::PolynomialTrajectory4D &msg = *p_msg;
@@ -61,6 +69,7 @@ void TrajectoryGenerator::trajectoryCallback(const mav_planning_msgs::Polynomial
     mav_trajectory_generation::Trajectory trajectory;
     planTrajectory(vertices, &trajectory);
     publishTrajectory(trajectory);
+    testTrajectory(trajectory);
 
 }
 
@@ -98,6 +107,9 @@ void TrajectoryGenerator::planTrajectory(const mav_trajectory_generation::Vertex
   //add constraints
   opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, max_v_);
   opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, max_a_);
+  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::JERK, max_j_);
+  opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::SNAP, max_s_);
+
   //solve
   opt.optimize();
   opt.getTrajectory(&(*trajectory));
@@ -199,5 +211,26 @@ bool TrajectoryGenerator::publishTrajectory(const mav_trajectory_generation::Tra
   pub_trajectory_.publish(msg);
 
   return true;
+}
+
+void TrajectoryGenerator::testTrajectory(const mav_trajectory_generation::Trajectory& trajectory) {
+  ROS_INFO("Print out trajectory configuration...");
+  mav_trajectory_generation::Extremum v_max_traj, v_min_traj, a_max_traj, a_min_traj, j_max_traj, j_min_traj, s_max_traj, s_min_traj;
+  std::vector<int> dimensions(3);
+  std::iota(dimensions.begin(), dimensions.end(), 0);
+
+  trajectory.computeMinMaxMagnitude(mav_trajectory_generation::derivative_order::VELOCITY, dimensions, &v_min_traj, &v_max_traj);
+  trajectory.computeMinMaxMagnitude(mav_trajectory_generation::derivative_order::ACCELERATION, dimensions, &a_min_traj, &a_max_traj);
+  trajectory.computeMinMaxMagnitude(mav_trajectory_generation::derivative_order::JERK, dimensions, &j_min_traj, &j_max_traj);
+  trajectory.computeMinMaxMagnitude(mav_trajectory_generation::derivative_order::SNAP, dimensions, &s_min_traj, &s_max_traj);
+
+  std::cout << "v_max (soft constraint): " << max_v_ << "; v_max_traj (real): " << v_max_traj << std::endl;
+  std::cout << "a_max (soft constraint): " << max_a_ << "; a_max_traj (real): " << a_max_traj << std::endl;
+  std::cout << "j_max (soft constraint): " << max_j_ << "; j_max_traj (real): " << j_max_traj << std::endl;
+  std::cout << "s_max (soft constraint): " << max_s_ << "; s_max_traj (real): " << s_max_traj << std::endl;
+
+  std::vector<double> segment_times = trajectory.getSegmentTimes();
+  double total_traversal_time = std::accumulate(segment_times.begin(), segment_times.end(), 0.0);
+  std::cout << "Total traversal time: " << total_traversal_time << std::endl;
 }
 

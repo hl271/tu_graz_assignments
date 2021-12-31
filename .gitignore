@@ -3,5 +3,5 @@
 build/*
 devel/*
 logs/*
-*.bag
 *.ot
+/*.bag

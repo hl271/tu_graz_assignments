@@ -304,8 +304,8 @@ void DLA2PathPlanner::plan()
             og::PathGeometric path(dynamic_cast<const og::PathGeometric&>(*pathPtr));
             p_simplified_traj_ompl = std::make_shared<og::PathGeometric>(path);
             run_simplifier(si, 20);
-            run_perturber(si, 20);
-            run_BSpline(si, 1);
+            // run_perturber(si, 20);
+            // run_BSpline(si, 1);
             // int runs = 20;
             
 

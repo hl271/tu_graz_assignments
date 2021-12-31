@@ -33,6 +33,7 @@ class TrajectoryGenerator {
                       mav_trajectory_generation::Trajectory* trajectory);
                       
   bool publishTrajectory(const mav_trajectory_generation::Trajectory& trajectory);
+  void testTrajectory(const mav_trajectory_generation::Trajectory& trajectory);
 
  private:
   ros::Publisher pub_markers_;
@@ -49,6 +50,8 @@ class TrajectoryGenerator {
   Eigen::Vector3d current_angular_velocity_;
   double max_v_; // m/s
   double max_a_; // m/s^2
+  double max_j_;
+  double max_s_;
   double max_ang_v_;
   double max_ang_a_;
 
