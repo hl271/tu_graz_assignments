@@ -127,6 +127,44 @@ public:
     }
 };
 
+class myMotionValidator :  public ob::MotionValidator {
+    public:
+    myMotionValidator(const ob::SpaceInformationPtr& si) :
+        ob::MotionValidator(si) {}
+
+    //** FIXING BUG #1: For classes that are derived from (Abstract Class - class that has virtual functions), all virtual functions 
+    //** must be defined in the derived class - otherwise the Derived class cannot be initiated
+
+    //TODO: Understand 'const override'
+    bool checkMotion(const ob::State* s1, const ob::State* s2) const override {
+        const double &prev_x = s1->as<ob::RealVectorStateSpace::StateType>()->values[0];
+        const double &prev_y = s1->as<ob::RealVectorStateSpace::StateType>()->values[1];
+        const double &prev_z = s1->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        
+        const double &current_x = s2->as<ob::RealVectorStateSpace::StateType>()->values[0];
+        const double &current_y = s2->as<ob::RealVectorStateSpace::StateType>()->values[1];
+        const double &current_z = s2->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        
+        octomap::point3d prev_point(prev_x, prev_y, prev_z);
+        octomap::point3d current_point(current_x, current_y, current_z);
+        octomap::point3d direction(current_x - prev_x, current_y - prev_y, current_z - prev_z);
+        float segment_length = sqrt(pow(current_x - prev_x,2)+pow(current_y - prev_y,2)+pow(current_z - prev_z,2));
+        octomap::point3d endpoint;
+        bool isObstacle = tree->castRay(prev_point, direction, endpoint, true, segment_length);
+        // std::cout << "\nPrev point: " << prev_point << std::endl;
+        // std::cout << "Current point: " << current_point << std::endl;
+        // std::cout << "Direction vector: " << direction << std::endl;
+        // std::cout << "Segment length: " << segment_length << std::endl;
+        // std::cout << "Endpoint: " << endpoint << std::endl;
+        if (isObstacle) {
+            std::cout << "Collide with obstacle!" << std::endl;
+            return false;
+        }
+        else return true;
+    }
+    
+    bool checkMotion (const ob::State *s1, const ob::State *s2, std::pair< ob::State *, double > &lastValid) const override {}
+};
 class PathLengthOptimizationObjectiveZPenalized : public ompl::base::OptimizationObjective
 {
 public:

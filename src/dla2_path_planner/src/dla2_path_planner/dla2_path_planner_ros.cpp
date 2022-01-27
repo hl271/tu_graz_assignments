@@ -200,18 +200,18 @@ void DLA2PathPlanner::plan()
 
     // Read map.bt file into the ocTree obj
     std::string path = ros::package::getPath("dla2_path_planner");        
-    std::cout << path << "/maps/power_plant.bt \n";
-    tree->readBinary(path+"/maps/power_plant.bt");
+    std::cout << path << "/maps/result.bt \n";
+    tree->readBinary(path+"/maps/result.bt");
 
     std::cout <<"read in tree, "<<tree->getNumLeafNodes()<<" leaves "<<std::endl;
 
     double x,y,z;
     tree->getMetricMin(x,y,z); // Output minimun value of the bounding space to x,y,z
     octomap::point3d min(x,y,z); // Create variable min of type 3dpoint
-    //std::cout<<"Metric min: "<<x<<","<<y<<","<<z<<std::endl;
+    std::cout<<"Metric min: "<<x<<","<<y<<","<<z<<std::endl;
     tree->getMetricMax(x,y,z);
     octomap::point3d max(x,y,z);
-    //std::cout<<"Metric max: "<<x<<","<<y<<","<<z<<std::endl;
+    std::cout<<"Metric max: "<<x<<","<<y<<","<<z<<std::endl;
 
     //Construct new distmap 
     bool unknownAsOccupied = true;
@@ -242,6 +242,8 @@ void DLA2PathPlanner::plan()
 
     // Set the object used to check which states in the space are valid
     si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
+    si->setMotionValidator(std::make_shared<myMotionValidator>(si));
+    // si->setStateValidityCheckingResolution(0.03 ); // 0.03 = 3%
 
     si->setup();
 
